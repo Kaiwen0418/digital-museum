@@ -16,12 +16,14 @@ npx serve . -l 4173
 ```
 
 ### 方式 2：Python（可选）
+直接启动静态服务器：
 
 ```bash
 python3 -m http.server 4173
 ```
 
 启动后访问：`http://localhost:4173`。
+然后访问 `http://localhost:4173`。
 
 ## GitHub Pages 部署
 
@@ -30,3 +32,4 @@ python3 -m http.server 4173
 > 注意：
 > 1. 本示例通过 CDN 加载 Three.js，不需要本地安装依赖。
 > 2. 页面资源使用相对路径，适配 GitHub Pages 子路径部署。
+> 注意：本示例通过 CDN 加载 Three.js，不需要本地安装依赖。
