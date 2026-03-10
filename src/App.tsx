@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 type Device = {
   id: string;
@@ -13,6 +14,14 @@ type ProgressCanvas = HTMLCanvasElement & {
   __updateProgress?: (value: number) => void;
 };
 
+type ModelConfig = {
+  path: string;
+  scale: number;
+  lift: number;
+  yaw?: number;
+  pitch?: number;
+};
+
 const DEVICES: Device[] = [
   { id: 'NOKIA-3310', year: 2004, name: 'NOKIA 3310', era: 'Early Mobile', specs: [['Display', '84×48'], ['Network', '2G GSM'], ['Battery', '900mAh']] },
   { id: 'IPOD-NANO', year: 2010, name: 'IPOD NANO', era: 'Portable Music', specs: [['Storage', '16GB'], ['Input', 'Touch'], ['Focus', 'Music']] },
@@ -24,6 +33,12 @@ const TIMELINE_DETAIL_TICKS = [-0.8, -0.45, -0.2, 0.35, 0.7, 1.35, 1.7, 2.35, 2.
 const SNAP_THRESHOLD = 0.52;
 const PREVIEW_RANGE = 0.86;
 const SNAP_CAPTURE_RADIUS = 0.24;
+const MODEL_CONFIGS: Partial<Record<Device['id'], ModelConfig>> = {
+  'NOKIA-3310': { path: 'models/nokia_3310/scene.gltf', scale: 3.55, lift: 0.04, yaw: Math.PI * 0.14 },
+  'IPOD-NANO': { path: 'models/ipod/scene.gltf', scale: 2.85, lift: 0.02, yaw: Math.PI * 0.42, pitch: Math.PI * 0.5 },
+  'MI-BAND': { path: 'models/casio_f-91w/scene.gltf', scale: 2.7, lift: 0.01, yaw: Math.PI * 1.22, pitch: Math.PI * 0.5 },
+  'WACOM-TABLET': { path: 'models/wacom_intuos_ctl-4100k-n/scene.gltf', scale: 3.9, lift: 0.02, yaw: Math.PI * 0.44 }
+};
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -54,6 +69,34 @@ function createDeviceMesh(id: string, darkMode: boolean) {
   return new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 0.1), material);
 }
 
+function createDeviceObject(id: string, darkMode: boolean) {
+  const group = new THREE.Group();
+  const mesh = createDeviceMesh(id, darkMode);
+  mesh.scale.setScalar(1.22);
+  group.add(mesh);
+  return group;
+}
+
+function brightenModelMaterials(root: any, darkMode: boolean) {
+  root.traverse((child: any) => {
+    if (!child.isMesh || !child.material) return;
+
+    const materials = Array.isArray(child.material) ? child.material : [child.material];
+    materials.forEach((material: any) => {
+      if (material.color) {
+        material.color.multiplyScalar(darkMode ? 1.18 : 1.12);
+      }
+      if (typeof material.roughness === 'number') {
+        material.roughness = Math.max(0.18, material.roughness * 0.88);
+      }
+      if (typeof material.metalness === 'number') {
+        material.metalness = Math.min(0.22, material.metalness * 0.75);
+      }
+      material.needsUpdate = true;
+    });
+  });
+}
+
 function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progress: number, darkMode: boolean) {
   const targetProgressRef = useRef(progress);
 
@@ -71,20 +114,75 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
 
     scene.add(new THREE.AmbientLight(0xffffff, darkMode ? 0.75 : 0.9));
 
-    const key = new THREE.DirectionalLight('#c2d9ff', 1.25);
+    const key = new THREE.DirectionalLight('#c2d9ff', 1.45);
     key.position.set(4, 6, 3);
     scene.add(key);
+
+    const fill = new THREE.DirectionalLight('#ffffff', darkMode ? 0.6 : 0.42);
+    fill.position.set(-5, 2, 4);
+    scene.add(fill);
 
     const rail = new THREE.Group();
     const spacing = 4.2;
     const deviceMeshes: any[] = [];
+    const loader = new GLTFLoader();
+    let isDisposed = false;
 
     DEVICES.forEach((item, idx) => {
-      const mesh = createDeviceMesh(item.id, darkMode);
-      mesh.scale.setScalar(1.22);
-      mesh.position.y = -idx * spacing;
-      rail.add(mesh);
-      deviceMeshes.push(mesh);
+      const placeholder = createDeviceObject(item.id, darkMode);
+      placeholder.position.y = -idx * spacing;
+      rail.add(placeholder);
+      deviceMeshes.push(placeholder);
+
+      const modelConfig = MODEL_CONFIGS[item.id];
+      if (!modelConfig) return;
+
+      loader.load(
+        `${import.meta.env.BASE_URL}${modelConfig.path}`,
+        (gltf: any) => {
+          if (isDisposed) return;
+
+          const modelGroup = new THREE.Group();
+          const model = gltf.scene;
+          const box = new THREE.Box3().setFromObject(model);
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+
+          box.getSize(size);
+          box.getCenter(center);
+
+          model.position.sub(center);
+
+          brightenModelMaterials(model, darkMode);
+
+          const maxDim = Math.max(size.x, size.y, size.z) || 1;
+          const normalizedScale = modelConfig.scale / maxDim;
+          model.scale.setScalar(normalizedScale);
+
+          const scaledBox = new THREE.Box3().setFromObject(model);
+          const scaledSize = new THREE.Vector3();
+          const scaledCenter = new THREE.Vector3();
+          scaledBox.getSize(scaledSize);
+          scaledBox.getCenter(scaledCenter);
+
+          model.position.x -= scaledCenter.x;
+          model.position.y -= scaledCenter.y - scaledSize.y * modelConfig.lift;
+          model.position.z -= scaledCenter.z;
+          model.rotation.y = modelConfig.yaw ?? 0;
+          model.rotation.x = modelConfig.pitch ?? 0;
+
+          modelGroup.add(model);
+          modelGroup.position.y = -idx * spacing;
+
+          rail.remove(placeholder);
+          rail.add(modelGroup);
+          deviceMeshes[idx] = modelGroup;
+        },
+        undefined,
+        () => {
+          // Keep placeholder geometry if the external asset fails to load.
+        }
+      );
     });
     scene.add(rail);
 
@@ -140,6 +238,7 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
     tick();
 
     return () => {
+      isDisposed = true;
       window.cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
       canvas.__updateProgress = undefined;
@@ -154,6 +253,8 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
+  const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
+  const [museumReveal, setMuseumReveal] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [centeredIndex, setCenteredIndex] = useState(0);
   const [isScrollInteracting, setIsScrollInteracting] = useState(false);
@@ -164,6 +265,12 @@ export default function App() {
   useEffect(() => {
     document.body.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    const onResize = () => setViewportHeight(window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     let ticking = false;
@@ -182,9 +289,14 @@ export default function App() {
 
       ticking = true;
       window.requestAnimationFrame(() => {
-        const max = document.documentElement.scrollHeight - window.innerHeight;
-        const ratio = max > 0 ? window.scrollY / max : 0;
-        setScrollProgress(ratio * (DEVICES.length - 1));
+        const heroHeight = viewportHeight;
+        const reveal = clamp(window.scrollY / (heroHeight * 0.92), 0, 1);
+        const museumScroll = Math.max(window.scrollY - heroHeight, 0);
+        const museumMax = Math.max(document.documentElement.scrollHeight - window.innerHeight - heroHeight, 1);
+        const ratio = museumMax > 0 ? museumScroll / museumMax : 0;
+
+        setMuseumReveal(reveal);
+        setScrollProgress(clamp(ratio, 0, 1) * (DEVICES.length - 1));
         ticking = false;
       });
     };
@@ -197,7 +309,7 @@ export default function App() {
         window.clearTimeout(scrollIdleTimeoutRef.current);
       }
     };
-  }, []);
+  }, [viewportHeight]);
 
   const nearestIndex = clamp(Math.round(scrollProgress), 0, DEVICES.length - 1);
   const isInSnapZone = Math.abs(scrollProgress - nearestIndex) <= SNAP_CAPTURE_RADIUS;
@@ -229,6 +341,8 @@ export default function App() {
   const playerMotionGlow = 1 - Math.min(Math.abs(displayPhase) / PREVIEW_RANGE, 1) * 0.55;
   const summary = `${current.year} · ${current.era} · ${current.specs.map(([k, v]) => `${k} ${v}`).join(' / ')}`;
   const timelineSpacing = 86;
+  const museumOpacity = smoothstep(0.18, 0.88, museumReveal);
+  const heroOpacity = 1 - smoothstep(0.08, 0.72, museumReveal);
 
   useBackgroundThree(canvasRef, visualProgress, darkMode);
 
@@ -236,15 +350,37 @@ export default function App() {
     document.getElementById(`scene-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  const enterMuseum = () => {
+    window.scrollTo({ top: viewportHeight, behavior: 'smooth' });
+  };
+
   return (
     <div className="page">
-      <canvas ref={canvasRef} className="bg-canvas" />
+      <canvas ref={canvasRef} className="bg-canvas" style={{ opacity: museumOpacity }} />
 
-      <button className="mode-btn overlay" onClick={() => setDarkMode((value) => !value)}>
+      <section className="hero-page" style={{ opacity: heroOpacity }}>
+        <div className="hero-inner">
+          <p className="hero-kicker">Personal Device Museum</p>
+          <h1 className="hero-title">A small archive of the devices that shaped my digital life.</h1>
+          <p className="hero-copy">
+            Scroll into the collection to move through phones, music players, wearables, and drawing tools as if
+            they were mounted in a living timeline.
+          </p>
+          <button type="button" className="hero-cta" onClick={enterMuseum}>
+            Enter Timeline
+          </button>
+        </div>
+      </section>
+
+      <button
+        className="mode-btn overlay"
+        style={{ opacity: museumOpacity, pointerEvents: museumOpacity > 0.4 ? 'auto' : 'none' }}
+        onClick={() => setDarkMode((value) => !value)}
+      >
         {darkMode ? 'LIGHT' : 'DARK'}
       </button>
 
-      <main className="layout overlay">
+      <main className="layout overlay" style={{ opacity: museumOpacity, pointerEvents: museumOpacity > 0.4 ? 'auto' : 'none' }}>
         <section className="left-rail">
           <section className="spec-left" style={{ transform: `translateY(${leftMotionY}px)`, opacity: leftMotionGlow }}>
             <h1 key={`title-${cardAnimKey}`} className="model-title fade-card">
@@ -299,7 +435,11 @@ export default function App() {
       <section
         className="player-right card-xl player-layer"
         key={`player-${cardAnimKey}`}
-        style={{ transform: `translateY(calc(-50% + ${playerMotionY}px))`, opacity: playerMotionGlow }}
+        style={{
+          transform: `translateY(calc(-50% + ${playerMotionY}px))`,
+          opacity: playerMotionGlow * museumOpacity,
+          pointerEvents: museumOpacity > 0.4 ? 'auto' : 'none'
+        }}
       >
         <div className="small-caption">NOW PLAYING</div>
         <div className="player-wrap">
@@ -323,6 +463,7 @@ export default function App() {
       </section>
 
       <section className="scroll-track">
+        <section className="hero-spacer" aria-hidden="true" />
         {DEVICES.map((item, idx) => (
           <section key={item.id} id={`scene-${idx}`} className="scroll-section" aria-hidden="true" />
         ))}
