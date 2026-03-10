@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Orbitron:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
   --bg: #e6e9f1;
@@ -23,7 +23,7 @@ html, body, #root {
   margin: 0;
   width: 100%;
   min-height: 100%;
-  font-family: 'Space Mono', ui-monospace, monospace;
+  font-family: 'VT323', ui-monospace, monospace;
   background: var(--bg);
 }
 
@@ -44,7 +44,14 @@ body {
 .page {
   min-height: 100vh;
   color: var(--text);
-  background: radial-gradient(circle at center, color-mix(in oklab, var(--bg) 72%, #1e293b 28%), var(--bg));
+  background:
+    radial-gradient(circle at top, color-mix(in oklab, var(--bg) 72%, #1e293b 28%), transparent 40%),
+    repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.02) 0 1px,
+      transparent 1px 3px
+    ),
+    var(--bg);
 }
 .bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; transition: opacity .45s ease; }
 .overlay { position: fixed; z-index: 8; }
@@ -56,51 +63,134 @@ body {
   display: flex;
   align-items: center;
   padding: 0 24px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 34%);
   transition: opacity .35s ease;
 }
 
 .hero-inner {
-  width: min(780px, 100%);
+  width: min(880px, 100%);
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
+}
+
+.hero-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .hero-kicker {
   margin: 0;
+  font-size: 14px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero-stamp {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
   font-size: 12px;
-  letter-spacing: .28em;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255,255,255,0.18);
+}
+
+.hero-frame {
+  position: relative;
+  padding: 32px 34px 30px;
+  border: 2px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+    color-mix(in oklab, var(--bg) 84%, #ffffff 16%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.14),
+    0 0 0 1px rgba(28, 48, 18, 0.12);
+}
+
+.hero-ornament {
+  width: 100%;
+  height: 2px;
+  margin-bottom: 18px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--border) 0 12px,
+      transparent 12px 18px
+    );
+}
+
+.hero-yearline {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: .14em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
 .hero-title {
-  margin: 18px 0 0;
-  font-family: 'Orbitron', sans-serif;
-  font-size: clamp(42px, 7vw, 96px);
-  line-height: .98;
+  margin: 22px 0 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(22px, 3vw, 40px);
+  line-height: 1.6;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
 
 .hero-copy {
-  width: min(560px, 100%);
+  width: min(620px, 100%);
   margin: 22px auto 0;
-  font-size: 14px;
-  line-height: 1.8;
+  font-size: 18px;
+  line-height: 1.35;
   color: var(--muted);
+  letter-spacing: .04em;
+  margin-left: 0;
+}
+
+.hero-notes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.hero-note {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  letter-spacing: .06em;
+  color: var(--muted);
+  background: rgba(255,255,255,0.14);
+}
+
+.hero-console {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border);
+  background: color-mix(in oklab, var(--soft) 88%, transparent);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.15;
 }
 
 .hero-cta {
   margin-top: 28px;
-  border: 1px solid var(--border);
-  background: transparent;
+  border: 2px solid var(--border);
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
   color: var(--text);
   padding: 12px 24px;
-  border-radius: 999px;
-  font-family: 'Orbitron', sans-serif;
-  letter-spacing: .08em;
+  border-radius: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
   cursor: pointer;
 }
 
@@ -311,6 +401,8 @@ body {
 .scroll-section { height: 88vh; }
 
 @media (max-width: 1100px){
+  .hero-meta { flex-direction: column; }
+  .hero-frame { padding: 32px 24px; }
   .layout { width: auto; margin-left: 24px; margin-right: 24px; transform: none; top: 72px; }
   .left-rail { grid-template-columns: 1fr; }
   .timeline-rail-wrap { display: none; }

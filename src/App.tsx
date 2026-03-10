@@ -21,15 +21,20 @@ type ModelConfig = {
   yaw?: number;
   pitch?: number;
   offsetX?: number;
+  brightness?: number;
+  emissiveIntensity?: number;
+  roughnessScale?: number;
+  metalnessScale?: number;
 };
 
 const DEVICES: Device[] = [
-  { id: 'NOKIA-3310', year: 2004, name: 'NOKIA 3310', era: 'Early Mobile', specs: [['Display', '84×48'], ['Network', '2G GSM'], ['Battery', '900mAh']] },
-  { id: 'SONY-WALKMAN', year: 2007, name: 'SONY WALKMAN', era: 'Portable Audio', specs: [['Format', 'Cassette'], ['Focus', 'Record + Playback'], ['Build', 'Field Recorder']] },
-  { id: 'IPOD-NANO', year: 2010, name: 'IPOD NANO', era: 'Portable Music', specs: [['Storage', '16GB'], ['Input', 'Touch'], ['Focus', 'Music']] },
-  { id: 'MI-BAND', year: 2018, name: 'CASIO F-91W', era: 'Digital Watches', specs: [['Display', 'LCD'], ['Functions', 'Alarm + Stopwatch'], ['Battery', 'Long Life Quartz']] },
-  { id: 'WACOM-TABLET', year: 2021, name: 'WACOM TABLET', era: 'Creative Tools', specs: [['Input', 'Pen'], ['Use', 'Drawing'], ['Connect', 'USB/BT']] },
-  { id: 'MACBOOK-M4', year: 2024, name: 'MACBOOK M4', era: 'Personal Computing', specs: [['Chip', 'Apple M4'], ['Form', 'Laptop'], ['Focus', 'Work + Create']] }
+  { id: 'MI-BAND', year: 2008, name: 'CASIO F-91W', era: 'Digital Watches', specs: [['Display', 'LCD'], ['Functions', 'Alarm + Stopwatch'], ['Battery', 'Long Life Quartz']] },
+  { id: 'SONY-WALKMAN', year: 2009, name: 'SONY WALKMAN', era: 'Portable Audio', specs: [['Format', 'Cassette'], ['Focus', 'Record + Playback'], ['Build', 'Field Recorder']] },
+  { id: 'NOKIA-3310', year: 2010, name: 'NOKIA 3310', era: 'Early Mobile', specs: [['Display', '84×48'], ['Network', '2G GSM'], ['Battery', '900mAh']] },
+  { id: 'IPOD-NANO', year: 2012, name: 'IPOD NANO', era: 'Portable Music', specs: [['Storage', '16GB'], ['Input', 'Touch'], ['Focus', 'Music']] },
+  { id: 'SAMSUNG-GALAXY', year: 2014, name: 'SAMSUNG GALAXY MINI II', era: 'Android Phones', specs: [['Display', '3.27-inch TFT'], ['System', 'Android'], ['Focus', 'Compact Smartphone']] },
+  { id: 'WACOM-TABLET', year: 2016, name: 'WACOM TABLET', era: 'Creative Tools', specs: [['Input', 'Pen'], ['Use', 'Drawing'], ['Connect', 'USB/BT']] },
+  { id: 'MACBOOK-M4', year: 2025, name: 'MACBOOK M4', era: 'Personal Computing', specs: [['Chip', 'Apple M4'], ['Form', 'Laptop'], ['Focus', 'Work + Create']] }
 ];
 
 const TIMELINE_DETAIL_TICKS = [-0.8, -0.45, -0.2, 0.35, 0.7, 1.35, 1.7, 2.35, 2.7, 3.2, 3.5, 3.8];
@@ -37,10 +42,16 @@ const SNAP_THRESHOLD = 1.92;
 const PREVIEW_RANGE = 0.86;
 const SNAP_CAPTURE_RADIUS = 0.54;
 const MODEL_CONFIGS: Partial<Record<Device['id'], ModelConfig>> = {
-  'NOKIA-3310': { path: 'models/nokia_3310/scene.gltf', scale: 3.55, lift: 0.04, yaw: Math.PI * 0.14 },
+  'MI-BAND': { path: 'models/casio_f-91w/scene.gltf', scale: 1.7, lift: 0.4, yaw: Math.PI * 1.22, pitch: Math.PI * 0.5 },
+  'NOKIA-3310': { path: 'models/nokia_3310/scene.gltf', scale: 2.55, lift: 0.04, yaw: Math.PI * 0.14 },
   'SONY-WALKMAN': { path: 'models/sony_walkman_professional_wm-d6c/scene.gltf', scale: 3.2, lift: 0.02, yaw: Math.PI * 0.52, offsetX: -0.98 },
   'IPOD-NANO': { path: 'models/ipod/scene.gltf', scale: 2.85, lift: 0.02, yaw: Math.PI * 0.42, pitch: Math.PI * 0.5 },
-  'MI-BAND': { path: 'models/casio_f-91w/scene.gltf', scale: 2.7, lift: 0.4, yaw: Math.PI * 1.22, pitch: Math.PI * 0.5 },
+  'SAMSUNG-GALAXY': {
+    path: 'models/samsung_galaxy_s4/scene.gltf',
+    scale: 3.25,
+    lift: 0.03,
+    yaw: Math.PI * 0.28
+  },
   'WACOM-TABLET': { path: 'models/wacom_intuos_ctl-4100k-n/scene.gltf', scale: 3.9, lift: 0.02, yaw: Math.PI * 0.44 },
   'MACBOOK-M4': { path: 'models/macbook_m4/scene.gltf', scale: 3.5, lift: 0.2, yaw: Math.PI * 0.8, pitch: Math.PI * 0.2 }
 };
@@ -56,10 +67,11 @@ function smoothstep(edge0: number, edge1: number, value: number) {
 
 function createDeviceMesh(id: string, darkMode: boolean) {
   const colorMap: Record<string, string> = {
+    'MI-BAND': darkMode ? '#86b3d1' : '#1f4f6b',
     'NOKIA-3310': darkMode ? '#8ba0bf' : '#34435a',
     'SONY-WALKMAN': darkMode ? '#8f96a4' : '#505866',
     'IPOD-NANO': darkMode ? '#2d3f62' : '#1e2a41',
-    'MI-BAND': darkMode ? '#86b3d1' : '#1f4f6b',
+    'SAMSUNG-GALAXY': darkMode ? '#a8b4d0' : '#68748f',
     'WACOM-TABLET': darkMode ? '#7f86cf' : '#454fb0',
     'MACBOOK-M4': darkMode ? '#9aa5bf' : '#6d7792'
   };
@@ -74,6 +86,7 @@ function createDeviceMesh(id: string, darkMode: boolean) {
   if (id === 'SONY-WALKMAN') return new THREE.Mesh(new THREE.BoxGeometry(1.95, 1.25, 0.55), material);
   if (id === 'IPOD-NANO') return new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 0.3), material);
   if (id === 'MI-BAND') return new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.16, 24, 80), material);
+  if (id === 'SAMSUNG-GALAXY') return new THREE.Mesh(new THREE.BoxGeometry(1.25, 2.2, 0.28), material);
   return new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 0.1), material);
 }
 
@@ -85,20 +98,28 @@ function createDeviceObject(id: string, darkMode: boolean) {
   return group;
 }
 
-function brightenModelMaterials(root: any, darkMode: boolean) {
+function tuneModelMaterials(root: any, darkMode: boolean, modelConfig?: ModelConfig) {
+  const brightness = modelConfig?.brightness ?? (darkMode ? 1.18 : 1.12);
+  const roughnessScale = modelConfig?.roughnessScale ?? 0.88;
+  const metalnessScale = modelConfig?.metalnessScale ?? 0.75;
+  const emissiveIntensity = modelConfig?.emissiveIntensity;
+
   root.traverse((child: any) => {
     if (!child.isMesh || !child.material) return;
 
     const materials = Array.isArray(child.material) ? child.material : [child.material];
     materials.forEach((material: any) => {
       if (material.color) {
-        material.color.multiplyScalar(darkMode ? 1.18 : 1.12);
+        material.color.multiplyScalar(brightness);
       }
       if (typeof material.roughness === 'number') {
-        material.roughness = Math.max(0.18, material.roughness * 0.88);
+        material.roughness = Math.max(0.18, material.roughness * roughnessScale);
       }
       if (typeof material.metalness === 'number') {
-        material.metalness = Math.min(0.22, material.metalness * 0.75);
+        material.metalness = Math.min(0.22, material.metalness * metalnessScale);
+      }
+      if (typeof material.emissiveIntensity === 'number' && typeof emissiveIntensity === 'number') {
+        material.emissiveIntensity = emissiveIntensity;
       }
       material.needsUpdate = true;
     });
@@ -119,16 +140,36 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = !darkMode;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     scene.add(new THREE.AmbientLight(0xffffff, darkMode ? 0.75 : 0.9));
 
     const key = new THREE.DirectionalLight('#c2d9ff', 1.45);
-    key.position.set(4, 6, 3);
+    key.position.set(4, 2, 3);
+    key.castShadow = !darkMode;
+    key.shadow.mapSize.width = 1024;
+    key.shadow.mapSize.height = 1024;
+    key.shadow.camera.near = 0.5;
+    key.shadow.camera.far = 20;
+    key.shadow.camera.left = -6;
+    key.shadow.camera.right = 6;
+    key.shadow.camera.top = 6;
+    key.shadow.camera.bottom = -6;
+    key.shadow.bias = -0.0008;
     scene.add(key);
 
     const fill = new THREE.DirectionalLight('#ffffff', darkMode ? 0.6 : 0.42);
     fill.position.set(-5, 2, 4);
     scene.add(fill);
+
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(22, 14),
+      new THREE.ShadowMaterial({ color: '#94a3b8', opacity: darkMode ? 0 : 0.2 })
+    );
+    shadowPlane.position.set(0, 0.85, -1.8);
+    shadowPlane.receiveShadow = !darkMode;
+    scene.add(shadowPlane);
 
     const rail = new THREE.Group();
     const spacing = 4.2;
@@ -139,6 +180,12 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
     DEVICES.forEach((item, idx) => {
       const placeholder = createDeviceObject(item.id, darkMode);
       placeholder.position.y = -idx * spacing;
+      placeholder.traverse((child: any) => {
+        if (child.isMesh) {
+          child.castShadow = !darkMode;
+          child.receiveShadow = !darkMode;
+        }
+      });
       rail.add(placeholder);
       deviceMeshes.push(placeholder);
 
@@ -161,7 +208,7 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
 
           model.position.sub(center);
 
-          brightenModelMaterials(model, darkMode);
+          tuneModelMaterials(model, darkMode, modelConfig);
 
           const maxDim = Math.max(size.x, size.y, size.z) || 1;
           const normalizedScale = modelConfig.scale / maxDim;
@@ -179,6 +226,12 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
           model.position.x += modelConfig.offsetX ?? 0;
           model.rotation.y = modelConfig.yaw ?? 0;
           model.rotation.x = modelConfig.pitch ?? 0;
+          model.traverse((child: any) => {
+            if (child.isMesh) {
+              child.castShadow = !darkMode;
+              child.receiveShadow = !darkMode;
+            }
+          });
 
           modelGroup.add(model);
           modelGroup.position.y = -idx * spacing;
@@ -227,6 +280,14 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
       deviceMeshes.forEach((mesh, idx) => {
         const local = currentProgress - idx;
         const nearCenter = 1 - clamp(Math.abs(local), 0, 1);
+        const shadowActive = !darkMode && Math.abs(local) < 0.55;
+
+        mesh.traverse((child: any) => {
+          if (child.isMesh) {
+            child.castShadow = shadowActive;
+            child.receiveShadow = shadowActive;
+          }
+        });
 
         if (local <= 0) {
           const align = smoothstep(0, 1, nearCenter);
@@ -267,6 +328,7 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [centeredIndex, setCenteredIndex] = useState(0);
   const [isScrollInteracting, setIsScrollInteracting] = useState(false);
+  const [displayedProgress, setDisplayedProgress] = useState(0);
   const [cardAnimKey, setCardAnimKey] = useState(0);
   const canvasRef = useRef<ProgressCanvas | null>(null);
   const scrollIdleTimeoutRef = useRef<number | null>(null);
@@ -337,13 +399,29 @@ export default function App() {
 
   const phase = scrollProgress - centeredIndex;
   const previewPhase = clamp((phase / SNAP_THRESHOLD) * PREVIEW_RANGE, -PREVIEW_RANGE, PREVIEW_RANGE);
-  const visualProgress = isScrollInteracting
+  const targetVisualProgress = isScrollInteracting
     ? centeredIndex + previewPhase
     : isInSnapZone
       ? centeredIndex
       : scrollProgress;
-  const transitionAmount = Math.min(Math.abs(phase) / SNAP_THRESHOLD, 1);
-  const displayPhase = visualProgress - centeredIndex;
+
+  useEffect(() => {
+    let raf = 0;
+
+    const tick = () => {
+      setDisplayedProgress((currentValue) => {
+        const nextValue = currentValue + (targetVisualProgress - currentValue) * 0.16;
+        return Math.abs(targetVisualProgress - nextValue) < 0.0015 ? targetVisualProgress : nextValue;
+      });
+      raf = window.requestAnimationFrame(tick);
+    };
+
+    tick();
+
+    return () => window.cancelAnimationFrame(raf);
+  }, [targetVisualProgress]);
+
+  const displayPhase = displayedProgress - centeredIndex;
   const leftMotionY = -displayPhase * 36;
   const leftMotionGlow = 1 - Math.min(Math.abs(displayPhase) / PREVIEW_RANGE, 1) * 0.55;
   const playerMotionY = -displayPhase * 36;
@@ -353,7 +431,7 @@ export default function App() {
   const museumOpacity = smoothstep(0.18, 0.88, museumReveal);
   const heroOpacity = 1 - smoothstep(0.08, 0.72, museumReveal);
 
-  useBackgroundThree(canvasRef, visualProgress, darkMode);
+  useBackgroundThree(canvasRef, displayedProgress, darkMode);
 
   const jumpToDevice = (idx: number) => {
     document.getElementById(`scene-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -369,15 +447,33 @@ export default function App() {
 
       <section className="hero-page" style={{ opacity: heroOpacity }}>
         <div className="hero-inner">
-          <p className="hero-kicker">Personal Device Museum</p>
-          <h1 className="hero-title">A small archive of the devices that shaped my digital life.</h1>
-          <p className="hero-copy">
-            Scroll into the collection to move through phones, music players, wearables, and drawing tools as if
-            they were mounted in a living timeline.
-          </p>
-          <button type="button" className="hero-cta" onClick={enterMuseum}>
-            Enter Timeline
-          </button>
+          <div className="hero-meta">
+            <span className="hero-kicker">Personal Device Museum</span>
+            <span className="hero-stamp">BBS ONLINE</span>
+          </div>
+          <div className="hero-frame">
+            <div className="hero-ornament" aria-hidden="true" />
+            <p className="hero-yearline">SYSOP LOG / 2008-2025 / DEVICE ARCHIVE</p>
+            <h1 className="hero-title">WELCOME TO THE PERSONAL DEVICE MUSEUM BBS</h1>
+            <p className="hero-copy">
+              Dial into a scrolling archive of handsets, cassette machines, watches, tablets, and portable computers.
+              Each page records a device that once felt immediate, modern, and necessary.
+            </p>
+            <div className="hero-notes">
+              <span className="hero-note">[PHONE]</span>
+              <span className="hero-note">[AUDIO]</span>
+              <span className="hero-note">[WATCH]</span>
+              <span className="hero-note">[COMPUTER]</span>
+            </div>
+            <div className="hero-console" aria-hidden="true">
+              <span>&gt; guest login accepted</span>
+              <span>&gt; archive nodes: 07</span>
+              <span>&gt; scroll to enter timeline</span>
+            </div>
+            <button type="button" className="hero-cta" onClick={enterMuseum}>
+              ENTER TIMELINE
+            </button>
+          </div>
         </div>
       </section>
 
@@ -412,7 +508,7 @@ export default function App() {
               />
             ))}
             {DEVICES.map((item, idx) => {
-              const offset = idx - visualProgress;
+              const offset = idx - displayedProgress;
               const distance = Math.min(Math.abs(offset), 2.4);
               const opacity = Math.max(0.18, 1 - distance * 0.34);
               const scale = Math.max(0.72, 1 - distance * 0.12);
