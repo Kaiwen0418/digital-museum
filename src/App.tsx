@@ -20,24 +20,29 @@ type ModelConfig = {
   lift: number;
   yaw?: number;
   pitch?: number;
+  offsetX?: number;
 };
 
 const DEVICES: Device[] = [
   { id: 'NOKIA-3310', year: 2004, name: 'NOKIA 3310', era: 'Early Mobile', specs: [['Display', '84×48'], ['Network', '2G GSM'], ['Battery', '900mAh']] },
+  { id: 'SONY-WALKMAN', year: 2007, name: 'SONY WALKMAN', era: 'Portable Audio', specs: [['Format', 'Cassette'], ['Focus', 'Record + Playback'], ['Build', 'Field Recorder']] },
   { id: 'IPOD-NANO', year: 2010, name: 'IPOD NANO', era: 'Portable Music', specs: [['Storage', '16GB'], ['Input', 'Touch'], ['Focus', 'Music']] },
-  { id: 'MI-BAND', year: 2018, name: 'MI BAND', era: 'Wearables', specs: [['Display', 'AMOLED'], ['Sensors', 'HR+Steps'], ['Battery', '20 days']] },
-  { id: 'WACOM-TABLET', year: 2021, name: 'WACOM TABLET', era: 'Creative Tools', specs: [['Input', 'Pen'], ['Use', 'Drawing'], ['Connect', 'USB/BT']] }
+  { id: 'MI-BAND', year: 2018, name: 'CASIO F-91W', era: 'Digital Watches', specs: [['Display', 'LCD'], ['Functions', 'Alarm + Stopwatch'], ['Battery', 'Long Life Quartz']] },
+  { id: 'WACOM-TABLET', year: 2021, name: 'WACOM TABLET', era: 'Creative Tools', specs: [['Input', 'Pen'], ['Use', 'Drawing'], ['Connect', 'USB/BT']] },
+  { id: 'MACBOOK-M4', year: 2024, name: 'MACBOOK M4', era: 'Personal Computing', specs: [['Chip', 'Apple M4'], ['Form', 'Laptop'], ['Focus', 'Work + Create']] }
 ];
 
 const TIMELINE_DETAIL_TICKS = [-0.8, -0.45, -0.2, 0.35, 0.7, 1.35, 1.7, 2.35, 2.7, 3.2, 3.5, 3.8];
-const SNAP_THRESHOLD = 0.52;
+const SNAP_THRESHOLD = 1.92;
 const PREVIEW_RANGE = 0.86;
-const SNAP_CAPTURE_RADIUS = 0.24;
+const SNAP_CAPTURE_RADIUS = 0.54;
 const MODEL_CONFIGS: Partial<Record<Device['id'], ModelConfig>> = {
   'NOKIA-3310': { path: 'models/nokia_3310/scene.gltf', scale: 3.55, lift: 0.04, yaw: Math.PI * 0.14 },
+  'SONY-WALKMAN': { path: 'models/sony_walkman_professional_wm-d6c/scene.gltf', scale: 3.2, lift: 0.02, yaw: Math.PI * 0.52, offsetX: -0.98 },
   'IPOD-NANO': { path: 'models/ipod/scene.gltf', scale: 2.85, lift: 0.02, yaw: Math.PI * 0.42, pitch: Math.PI * 0.5 },
-  'MI-BAND': { path: 'models/casio_f-91w/scene.gltf', scale: 2.7, lift: 0.01, yaw: Math.PI * 1.22, pitch: Math.PI * 0.5 },
-  'WACOM-TABLET': { path: 'models/wacom_intuos_ctl-4100k-n/scene.gltf', scale: 3.9, lift: 0.02, yaw: Math.PI * 0.44 }
+  'MI-BAND': { path: 'models/casio_f-91w/scene.gltf', scale: 2.7, lift: 0.4, yaw: Math.PI * 1.22, pitch: Math.PI * 0.5 },
+  'WACOM-TABLET': { path: 'models/wacom_intuos_ctl-4100k-n/scene.gltf', scale: 3.9, lift: 0.02, yaw: Math.PI * 0.44 },
+  'MACBOOK-M4': { path: 'models/macbook_m4/scene.gltf', scale: 3.5, lift: 0.2, yaw: Math.PI * 0.8, pitch: Math.PI * 0.2 }
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -52,9 +57,11 @@ function smoothstep(edge0: number, edge1: number, value: number) {
 function createDeviceMesh(id: string, darkMode: boolean) {
   const colorMap: Record<string, string> = {
     'NOKIA-3310': darkMode ? '#8ba0bf' : '#34435a',
+    'SONY-WALKMAN': darkMode ? '#8f96a4' : '#505866',
     'IPOD-NANO': darkMode ? '#2d3f62' : '#1e2a41',
     'MI-BAND': darkMode ? '#86b3d1' : '#1f4f6b',
-    'WACOM-TABLET': darkMode ? '#7f86cf' : '#454fb0'
+    'WACOM-TABLET': darkMode ? '#7f86cf' : '#454fb0',
+    'MACBOOK-M4': darkMode ? '#9aa5bf' : '#6d7792'
   };
 
   const material = new THREE.MeshStandardMaterial({
@@ -64,6 +71,7 @@ function createDeviceMesh(id: string, darkMode: boolean) {
   });
 
   if (id === 'NOKIA-3310') return new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.5, 0.28), material);
+  if (id === 'SONY-WALKMAN') return new THREE.Mesh(new THREE.BoxGeometry(1.95, 1.25, 0.55), material);
   if (id === 'IPOD-NANO') return new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 0.3), material);
   if (id === 'MI-BAND') return new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.16, 24, 80), material);
   return new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 0.1), material);
@@ -168,6 +176,7 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
           model.position.x -= scaledCenter.x;
           model.position.y -= scaledCenter.y - scaledSize.y * modelConfig.lift;
           model.position.z -= scaledCenter.z;
+          model.position.x += modelConfig.offsetX ?? 0;
           model.rotation.y = modelConfig.yaw ?? 0;
           model.rotation.x = modelConfig.pitch ?? 0;
 
@@ -252,7 +261,7 @@ function useBackgroundThree(canvasRef: RefObject<ProgressCanvas | null>, progres
 }
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
   const [museumReveal, setMuseumReveal] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
