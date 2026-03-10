@@ -19,9 +19,34 @@ body.dark {
   --accent: #dfe8ff;
 }
 
-html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monospace, monospace; background: var(--bg); }
-.page { min-height: 100%; color: var(--text); background: radial-gradient(circle at center, color-mix(in oklab, var(--bg) 72%, #1e293b 28%), var(--bg)); }
-.bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+html, body, #root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  background: var(--bg);
+}
+
+html {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100vh;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  color: var(--text);
+  background: radial-gradient(circle at center, color-mix(in oklab, var(--bg) 72%, #1e293b 28%), var(--bg));
+}
+.bg-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; }
 .overlay { position: fixed; z-index: 8; }
 
 .mode-btn {
@@ -40,16 +65,19 @@ html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monosp
 .layout {
   top: 50%;
   left: 0;
-  right: 0;
-  max-width: 1260px;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: grid;
-  grid-template-columns: 420px 140px 460px;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
+  width: min(420px, calc(100vw - 48px));
+  margin-left: clamp(12px, 7vw, 112px);
+  display: block;
   transform: translateY(-50%);
+}
+
+.left-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
 }
 
 .spec-left {
@@ -71,7 +99,7 @@ html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monosp
 .model-title {
   margin: 0;
   font-family: 'Orbitron', sans-serif;
-  font-size: 42px;
+  font-size: 32px;
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -80,9 +108,9 @@ html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monosp
 
 .model-summary {
   margin: 10px 0 0;
-  max-width: 32ch;
-  font-size: 13px;
-  line-height: 1.6;
+  max-width: 30ch;
+  font-size: 11px;
+  line-height: 1.5;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -92,25 +120,66 @@ html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monosp
   position: relative;
   height: 430px;
   align-self: center;
-  width: 140px;
+  width: 120px;
+  overflow: hidden;
+  perspective: 1000px;
+}
+.timeline-axis {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 96px;
+  width: 1px;
+  background: color-mix(in oklab, var(--muted) 34%, transparent);
+}
+.timeline-focus {
+  position: absolute;
+  left: 78px;
+  top: 50%;
+  width: 36px;
+  height: 2px;
+  background: color-mix(in oklab, var(--accent) 82%, transparent);
+  transform: translateY(-50%);
+  box-shadow: 0 0 18px color-mix(in oklab, var(--accent) 32%, transparent);
+}
+.timeline-detail-tick {
+  position: absolute;
+  left: 86px;
+  width: 10px;
+  height: 1px;
+  background: color-mix(in oklab, var(--muted) 48%, transparent);
+  transform: translateY(-50%);
+  opacity: .75;
 }
 .timeline-tick {
   position: absolute;
   left: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: flex-end;
+  gap: 16px;
   width: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
   color: inherit;
-  transform: translateY(-50%);
+  transform-style: preserve-3d;
+  transform-origin: 100% 50%;
+  transition: opacity .18s ease;
+}
+.tick-year {
+  min-width: 56px;
+  text-align: right;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--muted);
+  transition: color .22s ease, transform .22s ease;
 }
 .tick-mark {
   display: block;
-  width: 52px;
+  width: 26px;
   height: 2px;
   background:
     repeating-linear-gradient(
@@ -119,43 +188,62 @@ html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monosp
       transparent 8px 13px
     );
   opacity: .7;
-  transition: width .22s ease, opacity .22s ease, transform .22s ease;
+  transition: width .22s ease, opacity .22s ease, transform .22s ease, background-color .22s ease;
+}
+.timeline-tick.active {
+  z-index: 1;
+}
+.timeline-tick.active .tick-year,
+.timeline-tick:hover .tick-year {
+  color: var(--accent);
+  transform: translateX(-2px);
 }
 .timeline-tick.active .tick-mark,
 .timeline-tick:hover .tick-mark {
-  width: 78px;
+  width: 40px;
   opacity: 1;
-  transform: translateX(4px);
-}
-.tick-label {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 14px;
-  letter-spacing: .08em;
-  color: var(--muted);
-  transition: color .22s ease, transform .22s ease;
-}
-.timeline-tick.active .tick-label,
-.timeline-tick:hover .tick-label {
-  color: var(--accent);
-  transform: translateX(2px);
+  transform: translateX(0);
+  background:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in oklab, var(--accent) 82%, transparent) 0 8px,
+      transparent 8px 13px
+    );
 }
 
 .card-xl {
-  padding: 20px;
-  border-radius: 28px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 14px 34px rgba(2,6,23,.3);
+  padding: 18px 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.player-layer {
+  position: fixed;
+  top: 50%;
+  right: clamp(12px, 7vw, 112px);
+  width: min(420px, calc(100vw - 48px));
+  z-index: 1;
+  opacity: .82;
+  transition: opacity .24s ease, transform .24s ease;
 }
 
 .player-wrap { display: flex; gap: 16px; margin-top: 14px; }
-.cover-lg { width: 170px; height: 170px; border-radius: 20px; object-fit: cover; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
-.track-title { margin-top: 2px; font-family: 'Orbitron', sans-serif; font-size: 28px; line-height: 1.06; }
-.track-sub { margin-top: 8px; color: var(--muted); font-size: 14px; }
-.bar { margin-top: 20px; height: 7px; border-radius: 999px; background: color-mix(in oklab, var(--muted) 35%, transparent); }
+.cover-lg {
+  width: 150px;
+  height: 150px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  opacity: .9;
+}
+.track-title { margin-top: 2px; font-family: 'Orbitron', sans-serif; font-size: 24px; line-height: 1.06; }
+.track-sub { margin-top: 8px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.bar { margin-top: 18px; height: 6px; border-radius: 999px; background: color-mix(in oklab, var(--muted) 28%, transparent); }
 .bar-fill { width: 48%; height: 100%; border-radius: 999px; background: color-mix(in oklab, var(--accent) 85%, #6ea8ff 15%); }
-.times { margin-top: 8px; display: flex; justify-content: center; font-size: 12px; color: var(--muted); }
+.times { margin-top: 8px; display: flex; justify-content: center; font-size: 11px; color: var(--muted); }
 
 .fade-card { animation: fadeSwap .34s ease; }
 @keyframes fadeSwap {
@@ -164,20 +252,22 @@ html, body, #root { margin: 0; width: 100%; font-family: 'Space Mono', ui-monosp
 }
 
 .scroll-track { position: relative; z-index: 2; padding-top: 180px; }
-.scroll-section { height: 88vh; display: flex; align-items: center; justify-content: center; }
-.scroll-year {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 96px;
-  color: color-mix(in oklab, var(--muted) 34%, transparent);
-  font-weight: 800;
-  letter-spacing: .08em;
-  user-select: none;
-}
+.scroll-section { height: 88vh; }
 
 @media (max-width: 1100px){
-  .layout { grid-template-columns: 1fr; transform: none; top: 72px; }
+  .layout { width: auto; margin-left: 24px; margin-right: 24px; transform: none; top: 72px; }
+  .left-rail { grid-template-columns: 1fr; }
   .timeline-rail-wrap { display: none; }
-  .model-title { font-size: 34px; }
+  .model-title { font-size: 28px; }
   .player-wrap { flex-direction: column; }
   .cover-lg { width: 100%; height: 220px; }
+  .player-layer {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    margin: 28px 24px 0;
+    transition: opacity .24s ease, transform .24s ease;
+    z-index: 1;
+  }
 }
