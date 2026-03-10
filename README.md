@@ -1,35 +1,38 @@
-# Nokia 经典手机（React + Tailwind + Three.js）
+# Personal Device Museum Timeline
 
-已切换为标准 **npm + Vite** 工作流。
+已完成“界面空白”检修，并提供可直接运行的页面版本（无需先走 TSX 编译）。
 
-## 技术栈
+## 当前状态
 
-- React 18
-- Vite 5
-- Tailwind CSS 3（PostCSS）
-- Three.js
+- 页面结构：时间线导航 + 中央 3D 展区 + Specs + 极简播放器
+- 视觉风格：现代、极简、画廊化
+- 3D：占位模型（按设备类型切换）
+- 架构预留：未来可替换真实 glTF/GLB 模型，可接入设备交互逻辑
 
-## 项目结构
+## 运行方式
 
-- `src/main.js`：Vite 入口
-- `src/App.js`：React HUD 与状态管理
-- `src/three/nokiaScene.js`：Three.js 场景与建模逻辑
-- `src/style.css`：Tailwind 入口与基础样式
+### 方式 1（当前环境可直接验证）
 
-## 开发
+```bash
+python3 -m http.server 4173
+```
+
+打开 `http://localhost:4173`
+
+### 方式 2（标准 npm + Vite）
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 构建
+> 说明：本仓库仍保留 Vite + TypeScript + Tailwind + R3F 相关配置，便于后续切回完整构建链路。
 
-```bash
-npm run build
-npm run preview
-```
 
-## GitHub Pages
+## 新增交互
 
-保留 `.github/workflows/deploy.yml` 自动部署流程；Vite `base: './'` 已适配 GitHub Pages 子路径部署。
+
+- 不再使用独立 3D 展示区，建模已融入全页背景层，信息卡片叠加其上
+- 明暗模式切换按钮
+- 页面纵向滚动切换设备（左侧时间线点击可快速跳转）
+- 中央 3D 展区新增“纵向背景时间轴”，并压在设备底下随滚动更新
