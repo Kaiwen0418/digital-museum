@@ -1,38 +1,88 @@
-# Personal Device Museum Timeline
+# Object Echo
 
-已完成“界面空白”检修，并提供可直接运行的页面版本（无需先走 TSX 编译）。
+Object Echo is a proof-of-concept website for building personal digital collection pages.  
+The current repository is an interactive front-end prototype: a scroll-driven timeline that stages devices, specs, music, and 3D models as a curated exhibition.
 
-## 当前状态
+## Project Status
 
-- 页面结构：时间线导航 + 中央 3D 展区 + Specs + 极简播放器
-- 视觉风格：现代、极简、画廊化
-- 3D：占位模型（按设备类型切换）
-- 架构预留：未来可替换真实 glTF/GLB 模型，可接入设备交互逻辑
+This repo is currently a concept proof, not a production-ready platform.
 
-## 运行方式
+What exists today:
 
-### 方式 1（当前环境可直接验证）
+- A React + TypeScript front-end prototype
+- A 3D timeline-style presentation layer
+- Support for multiple local glTF models
+- A landing page plus a museum-style scrolling exhibition
+- Experimental interaction patterns for snapping, previewing, and staged transitions
 
-```bash
-python3 -m http.server 4173
-```
+What is planned next:
 
-打开 `http://localhost:4173`
+- Migration to `Next.js + App Router`
+- User accounts with `Supabase Auth`
+- Project and device data in `Supabase Postgres`
+- Asset storage via `Cloudflare R2`
+- DIY project creation flow:
+  - enter device list
+  - match specs
+  - choose or upload models
+  - choose or upload music
+  - publish a personal museum page
 
-### 方式 2（标准 npm + Vite）
+## Vision
+
+The long-term goal is to turn this prototype into an open-source, free personal collection builder where users can create their own exhibition-style archive pages for devices and objects they care about.
+
+The intended product direction includes:
+
+- personal museum pages
+- editable device timelines
+- reusable 3D presentation templates
+- model search/import workflows
+- music attachment workflows
+- public shareable collection pages
+
+## Tech Direction
+
+The prototype currently runs as a front-end app, but the recommended target architecture is:
+
+- Front-end and API: `TypeScript + Next.js App Router`
+- Auth and data: `Supabase`
+- Large asset storage: `Cloudflare R2`
+- 3D rendering: reusable Three.js presentation module extracted from the current prototype
+
+## Running the Current Prototype
+
+Install dependencies:
 
 ```bash
 npm install
+```
+
+Start development:
+
+```bash
 npm run dev
 ```
 
-> 说明：本仓库仍保留 Vite + TypeScript + Tailwind + R3F 相关配置，便于后续切回完整构建链路。
+Build for production:
 
+```bash
+npm run build
+```
 
-## 新增交互
+Type-check:
 
+```bash
+npm run typecheck
+```
 
-- 不再使用独立 3D 展示区，建模已融入全页背景层，信息卡片叠加其上
-- 明暗模式切换按钮
-- 页面纵向滚动切换设备（左侧时间线点击可快速跳转）
-- 中央 3D 展区新增“纵向背景时间轴”，并压在设备底下随滚动更新
+## Repository Notes
+
+- The current codebase is optimized for prototyping interaction and presentation, not yet for multi-user production workflows.
+- Some model assets in `public/models/` are local references used for staging the visual concept.
+- Licensing and copyright handling for third-party models and music are not solved by this prototype and will need explicit platform policy before production use.
+
+## Disclaimer
+
+This repository should be treated as a concept validation project for product, interaction, and presentation design.  
+It demonstrates how a personal collection website could feel, but it does not yet implement the full publishing, authentication, storage, or copyright-compliance pipeline required for a public platform.
